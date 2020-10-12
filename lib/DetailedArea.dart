@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'util/Areas.dart';
 import 'package:webfeed/domain/rss_feed.dart';
-import 'package:audioplayer/audioplayer.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'Util/NewsModel.dart';
 import 'package:./http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -69,6 +69,13 @@ class DetailedAreaState extends State<DetailedArea>
   Area selectedArea;
   DetailedAreaState(this.selectedArea);
   AudioPlayer audioPlayer = new AudioPlayer();
+  Duration duration = new Duration();
+  Duration position = new Duration();
+
+  bool playing = false;
+
+  String urlcopy;
+  String durationCopy;
 
   @override
   Widget build(BuildContext context) {
@@ -101,44 +108,40 @@ class DetailedAreaState extends State<DetailedArea>
                     final NewsModel _item = _news[i];
                     //Returnerer list Tile med dato, duration og knap til afspilning af URL og stop knap.
                     return ListTile(
-                        title: Text(
-                            '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}'),
-                        //.replaceFirst(RegExp(source), to)
-                        subtitle: Text(
-                            '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}' +
-                                " minutter"),
-                        leading: new IconButton(
-                            iconSize: 50,
-                            alignment: Alignment.centerLeft,
-                            icon: Icon(
-                              Icons.play_circle_outline,
-                              //color: _iconColor,
-                              color: _colors[i],
-                            ),
-                            onPressed: () {
-                              //when button is pressed, icon color os changed to Green and file starts playing.
-                              _colors[i] = Colors.blue[200];
-                              audioPlayer.play('${_item.enclosure}');
-                              //listen for player state changes
-                              audioPlayer.onPlayerStateChanged.listen((s) {
-                                setState(() {
-                                  //when state is COMPLETED or STOPPED, icons are blue.
-                                  if (s == AudioPlayerState.COMPLETED ||
-                                      s == AudioPlayerState.STOPPED) {
-                                    _colors[i] = Colors.blue[700];
-                                  }
-                                });
+                      title: Text(
+                          '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}'),
+                      //.replaceFirst(RegExp(source), to)
+                      subtitle: Text(
+                          '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}' +
+                              " minutter"),
+                      // slider(); Insert this in modal popup
+                      leading: new IconButton(
+                          iconSize: 50,
+                          alignment: Alignment.centerLeft,
+                          icon: Icon(
+                            Icons.play_circle_outline,
+                            //color: _iconColor,
+                            color: _colors[i],
+                          ),
+                          onPressed: () {
+                            _playerModalBottomSheet(context);
+                            //when button is pressed, icon color os changed to Green and file starts playing.
+                            _colors[i] = Colors.blue[200];
+                            //TODO: make global variable for all items to use in popup
+                            urlcopy = '${_item.enclosure}';
+                            //audioPlayer.play('${_item.enclosure}');
+                            //listen for player state changes
+                            audioPlayer.onPlayerStateChanged.listen((s) {
+                              setState(() {
+                                //when state is COMPLETED or STOPPED, icons are blue.
+                                if (s == AudioPlayerState.COMPLETED ||
+                                    s == AudioPlayerState.STOPPED) {
+                                  _colors[i] = Colors.blue[700];
+                                }
                               });
-                            }),
-                        trailing: new IconButton(
-                            iconSize: 50,
-                            icon: Icon(
-                              Icons.pause_circle_outline,
-                              color: Colors.blue[700],
-                            ),
-                            onPressed: () {
-                              audioPlayer.stop();
-                            }));
+                            });
+                          }),
+                    );
                   },
                   separatorBuilder: (context, i) => Divider(
                     color: Colors.blueGrey[300],
@@ -199,5 +202,69 @@ class DetailedAreaState extends State<DetailedArea>
     } else {
       throw HttpException('Failed to fetch the data');
     }
+  }
+
+  //popup modal der viser at afspilning er i gang.
+  void _playerModalBottomSheet(context) {
+    Color _colors = Colors.blue[700];
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          audioPlayer.play(urlcopy);
+          return Container(
+              alignment: Alignment.center,
+              height: MediaQuery.of(context).size.height * .60,
+              child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(children: <Widget>[
+                    Text("Luk"),
+                    IconButton(
+                        icon: Icon(Icons.cancel),
+                        onPressed: () {
+                          audioPlayer.stop();
+                          Navigator.of(context).pop();
+                        }),
+                    Column(children: <Widget>[
+                      Text("testText"),
+                      IconButton(
+                        iconSize: 100,
+                        icon: Icon(
+                          Icons.play_circle_outline,
+                          color: _colors,
+                        ),
+                        onPressed: () {
+                          audioPlayer.onPlayerStateChanged.listen((s) {
+                            setState(() {
+                              if (s == AudioPlayerState.PLAYING) {
+                                _colors = Colors.blue[700];
+                                audioPlayer.pause();
+                              } else if (s == AudioPlayerState.PAUSED ||
+                                  s == AudioPlayerState.STOPPED) {
+                                audioPlayer.play(urlcopy, isLocal: true);
+                                _colors = Colors.blue[200];
+                              }
+                            });
+                          });
+                        },
+                      ),
+                      Column(
+                        children: [
+                          slider(),
+                        ],
+                      ),
+                    ])
+                  ])));
+        });
+  }
+
+  //Slider widget
+  Widget slider() {
+    return Slider.adaptive(
+        min: 0.0,
+        max: duration.inSeconds.toDouble(),
+        value: duration.inSeconds.toDouble(),
+        onChanged: (double value) {
+          setState(() {});
+        });
   }
 }

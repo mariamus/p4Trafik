@@ -26,7 +26,7 @@ dependencies:
   webfeed: ^0.6.0
   http: 
   path_provider: "^1.6.18"
-  audioplayer: "0.8.1"
+  audioplayers: ^0.16.1
   audioplayer_web: "0.7.1"
   flutter_launcher_icons: ^0.7.4
   url_launcher:
