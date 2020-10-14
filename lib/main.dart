@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   _handleDetailedViewdata(int index) async {
-    bool data = await Navigator.push(context,
+    await Navigator.push(context,
         MaterialPageRoute(builder: (context) => DetailedArea(_areas[index])));
   }
 

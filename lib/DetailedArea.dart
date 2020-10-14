@@ -20,6 +20,7 @@ class DetailedAreaState extends State<DetailedArea>
     with WidgetsBindingObserver {
   List<Color> _colors = [];
   int listsizes = 10;
+  bool playing = false;
 
   generateColors() {
     _colors = List.generate(
@@ -72,11 +73,11 @@ class DetailedAreaState extends State<DetailedArea>
   Duration duration = new Duration();
   Duration position = new Duration();
 
-  bool playing = false;
-
   String urlcopy;
+  String titletext;
   String durationCopy;
 
+  //bool playing = false;
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -120,26 +121,13 @@ class DetailedAreaState extends State<DetailedArea>
                           alignment: Alignment.centerLeft,
                           icon: Icon(
                             Icons.play_circle_outline,
-                            //color: _iconColor,
                             color: _colors[i],
                           ),
                           onPressed: () {
                             _playerModalBottomSheet(context);
-                            //when button is pressed, icon color os changed to Green and file starts playing.
-                            _colors[i] = Colors.blue[200];
-                            //TODO: make global variable for all items to use in popup
                             urlcopy = '${_item.enclosure}';
-                            //audioPlayer.play('${_item.enclosure}');
-                            //listen for player state changes
-                            audioPlayer.onPlayerStateChanged.listen((s) {
-                              setState(() {
-                                //when state is COMPLETED or STOPPED, icons are blue.
-                                if (s == AudioPlayerState.COMPLETED ||
-                                    s == AudioPlayerState.STOPPED) {
-                                  _colors[i] = Colors.blue[700];
-                                }
-                              });
-                            });
+                            titletext =
+                                '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}';
                           }),
                     );
                   },
@@ -206,53 +194,68 @@ class DetailedAreaState extends State<DetailedArea>
 
   //popup modal der viser at afspilning er i gang.
   void _playerModalBottomSheet(context) {
-    Color _colors = Colors.blue[700];
+    Color _color = Colors.blue[700];
     showModalBottomSheet(
+        backgroundColor: Colors.blue[100],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        isDismissible: false,
+        enableDrag: false,
+        isScrollControlled: false,
         context: context,
         builder: (BuildContext bc) {
-          audioPlayer.play(urlcopy);
+          playing = true;
+          print("playing true2");
+          audioPlayer.play(urlcopy, isLocal: true);
           return Container(
               alignment: Alignment.center,
-              height: MediaQuery.of(context).size.height * .60,
+              height: MediaQuery.of(context).size.height,
               child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(children: <Widget>[
-                    Text("Luk"),
-                    IconButton(
-                        icon: Icon(Icons.cancel),
-                        onPressed: () {
-                          audioPlayer.stop();
-                          Navigator.of(context).pop();
-                        }),
-                    Column(children: <Widget>[
-                      Text("testText"),
-                      IconButton(
-                        iconSize: 100,
-                        icon: Icon(
-                          Icons.play_circle_outline,
-                          color: _colors,
-                        ),
-                        onPressed: () {
-                          audioPlayer.onPlayerStateChanged.listen((s) {
-                            setState(() {
-                              if (s == AudioPlayerState.PLAYING) {
-                                _colors = Colors.blue[700];
-                                audioPlayer.pause();
-                              } else if (s == AudioPlayerState.PAUSED ||
-                                  s == AudioPlayerState.STOPPED) {
-                                audioPlayer.play(urlcopy, isLocal: true);
-                                _colors = Colors.blue[200];
-                              }
-                            });
-                          });
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(children: <Widget>[
+                    Row(
+                      children: [
+                        Text(titletext),
+                        Spacer(),
+                        IconButton(
+                            icon: Icon(Icons.cancel),
+                            color: _color,
+                            iconSize: 40,
+                            onPressed: () {
+                              audioPlayer.stop();
+                              playing = false;
+                              Navigator.of(context).pop();
+                            }),
+                      ],
+                    ),
+                    Column(children: [
+                      InkWell(
+                        onTap: () {
+                          if (playing == true) {
+                            playing = false;
+                            print(playing);
+                            audioPlayer.pause();
+                          } else {
+                            playing = true;
+                            print(playing);
+                            audioPlayer.play(urlcopy, isLocal: true);
+                          }
                         },
+                        child: Icon(
+                          playing == false
+                              ? Icons.pause_circle_outline
+                              : Icons.play_circle_outline,
+                          size: MediaQuery.of(context).size.width * .50,
+                          color: _color,
+                        ),
                       ),
-                      Column(
-                        children: [
-                          slider(),
-                        ],
-                      ),
-                    ])
+                    ]),
+                    Column(
+                        //children: [
+                        //slider(),
+                        //],
+                        ),
                   ])));
         });
   }
@@ -264,7 +267,10 @@ class DetailedAreaState extends State<DetailedArea>
         max: duration.inSeconds.toDouble(),
         value: duration.inSeconds.toDouble(),
         onChanged: (double value) {
-          setState(() {});
+          audioPlayer.onAudioPositionChanged.listen((Duration p) => {
+                Text('Current position: $p'),
+                setState(() => position = p),
+              });
         });
   }
 }

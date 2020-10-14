@@ -22,13 +22,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.5.0-nullsafety.1"
-  audioplayer_web:
-    dependency: "direct main"
-    description:
-      name: audioplayer_web
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.7.1"
   audioplayers:
     dependency: "direct main"
     description:
