@@ -251,7 +251,7 @@ class DetailedAreaState extends State<DetailedArea>
                         ),
                       ),
                     ]),
-                    Column(
+                    Column( 
                         //children: [
                         //slider(),
                         //],
