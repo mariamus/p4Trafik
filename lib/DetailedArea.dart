@@ -170,6 +170,15 @@ class DetailedAreaState extends State<DetailedArea>
     return null;
   }
 
+  void _playerModalBottomSheet() {
+    showModalBottomSheet() async {
+      return Container(
+        audioPlayer.play(url),
+        child: Text("Test"),
+      )        
+        };
+  }
+
   /*Future function der først kører en clear cache function og derefter asynkront 
    tjekker på om xml URL'en giver statuskode 200 i respons. Derefter scraper den XML
    filen for tags og tilføjer til en List. */
