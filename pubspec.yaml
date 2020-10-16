@@ -27,7 +27,6 @@ dependencies:
   http: 
   path_provider: "^1.6.18"
   audioplayers: ^0.16.1
-  
   flutter_launcher_icons: ^0.7.4
   url_launcher:
 

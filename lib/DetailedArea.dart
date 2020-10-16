@@ -21,6 +21,9 @@ class DetailedAreaState extends State<DetailedArea>
   List<Color> _colors = [];
   int listsizes = 10;
   bool playing = false;
+  AudioPlayer audioPlayer = new AudioPlayer();
+  Duration duration = new Duration();
+  Duration position = new Duration();
 
   generateColors() {
     _colors = List.generate(
@@ -69,15 +72,11 @@ class DetailedAreaState extends State<DetailedArea>
 
   Area selectedArea;
   DetailedAreaState(this.selectedArea);
-  AudioPlayer audioPlayer = new AudioPlayer();
-  Duration duration = new Duration();
-  Duration position = new Duration();
 
   String urlcopy;
   String titletext;
   String durationCopy;
 
-  //bool playing = false;
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -107,15 +106,13 @@ class DetailedAreaState extends State<DetailedArea>
                   itemBuilder: (context, i) {
                     //populerer List med items.
                     final NewsModel _item = _news[i];
-                    //Returnerer list Tile med dato, duration og knap til afspilning af URL og stop knap.
+                    //Returnerer list Tile med dato, duration og iconbutton der åbner BottomModalSheet
                     return ListTile(
                       title: Text(
                           '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}'),
-                      //.replaceFirst(RegExp(source), to)
                       subtitle: Text(
                           '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}' +
                               " minutter"),
-                      // slider(); Insert this in modal popup
                       leading: new IconButton(
                           iconSize: 50,
                           alignment: Alignment.centerLeft,
@@ -128,6 +125,9 @@ class DetailedAreaState extends State<DetailedArea>
                             urlcopy = '${_item.enclosure}';
                             titletext =
                                 '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}';
+                            setState(() {
+                              getAudio();
+                            });
                           }),
                     );
                   },
@@ -170,15 +170,6 @@ class DetailedAreaState extends State<DetailedArea>
     return null;
   }
 
-  void _playerModalBottomSheet() {
-    showModalBottomSheet() async {
-      return Container(
-        audioPlayer.play(url),
-        child: Text("Test"),
-      )        
-        };
-  }
-
   /*Future function der først kører en clear cache function og derefter asynkront 
    tjekker på om xml URL'en giver statuskode 200 i respons. Derefter scraper den XML
    filen for tags og tilføjer til en List. */
@@ -201,6 +192,64 @@ class DetailedAreaState extends State<DetailedArea>
     }
   }
 
+  //Slider widget
+  Widget slider() {
+    return Slider.adaptive(
+        min: 0.0,
+        value: position.inSeconds.toDouble(),
+        max: duration.inSeconds.toDouble(),
+        onChanged: (double value) {
+          setState(() {
+            print(value);
+            audioPlayer.seek(Duration(seconds: value.toInt()));
+          });
+        });
+  }
+
+  Widget slider2() {
+    StatefulBuilder(
+      builder: (context, setState) {
+        return Slider.adaptive(
+          min: 0.0,
+          value: position.inSeconds.toDouble(),
+          max: duration.inSeconds.toDouble(),
+          onChanged: (double value) {
+            setState(() {
+              print(value);
+              audioPlayer.seek(Duration(seconds: value.toInt()));
+            });
+          },
+        );
+      },
+    );
+  }
+
+  void getAudio() async {
+    audioPlayer.onDurationChanged.listen((Duration dur) {
+      setState(() => duration = dur);
+    });
+    audioPlayer.onAudioPositionChanged.listen((Duration pos) {
+      setState(() => position = pos);
+    });
+    if (playing) {
+      //pause
+      var res = await audioPlayer.pause();
+      if (res == 1) {
+        setState(() {
+          playing = false;
+        });
+      }
+    } else {
+      //play song
+      var res = await audioPlayer.play(urlcopy, isLocal: true);
+      if (res == 1) {
+        setState(() {
+          playing = true;
+        });
+      }
+    }
+  }
+
   //popup modal der viser at afspilning er i gang.
   void _playerModalBottomSheet(context) {
     Color _color = Colors.blue[700];
@@ -213,73 +262,57 @@ class DetailedAreaState extends State<DetailedArea>
         enableDrag: false,
         isScrollControlled: false,
         context: context,
-        builder: (BuildContext bc) {
-          playing = true;
-          print("playing true2");
-          audioPlayer.play(urlcopy, isLocal: true);
-          return Container(
-              alignment: Alignment.center,
-              height: MediaQuery.of(context).size.height,
-              child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(children: <Widget>[
-                    Row(
-                      children: [
-                        Text(titletext),
-                        Spacer(),
-                        IconButton(
-                            icon: Icon(Icons.cancel),
-                            color: _color,
-                            iconSize: 40,
-                            onPressed: () {
-                              audioPlayer.stop();
-                              playing = false;
-                              Navigator.of(context).pop();
-                            }),
-                      ],
-                    ),
-                    Column(children: [
-                      InkWell(
-                        onTap: () {
-                          if (playing == true) {
-                            playing = false;
-                            print(playing);
-                            audioPlayer.pause();
-                          } else {
-                            playing = true;
-                            print(playing);
-                            audioPlayer.play(urlcopy, isLocal: true);
-                          }
-                        },
-                        child: Icon(
-                          playing == false
-                              ? Icons.pause_circle_outline
-                              : Icons.play_circle_outline,
-                          size: MediaQuery.of(context).size.width * .50,
-                          color: _color,
-                        ),
+        builder: (context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+            return Container(
+                height: MediaQuery.of(context).size.height,
+                child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Text(
+                            titletext,
+                          ),
+                          Spacer(),
+                          IconButton(
+                              icon: Icon(Icons.cancel),
+                              color: _color,
+                              iconSize: 40,
+                              onPressed: () {
+                                audioPlayer.stop();
+                                setState(() {
+                                  playing = false;
+                                  duration = Duration(seconds: 0);
+                                  position = Duration(seconds: 0);
+                                });
+                                Navigator.of(context).pop();
+                              }),
+                        ],
                       ),
-                    ]),
-                    Column( 
-                        //children: [
-                        //slider(),
-                        //],
+                      Column(children: [
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              getAudio();
+                            });
+                          },
+                          child: Icon(
+                            playing == true
+                                ? Icons.pause_circle_outline
+                                : Icons.play_circle_outline,
+                            size: MediaQuery.of(context).size.width * .50,
+                            color: _color,
+                          ),
                         ),
-                  ])));
-        });
-  }
-
-  //Slider widget
-  Widget slider() {
-    return Slider.adaptive(
-        min: 0.0,
-        max: duration.inSeconds.toDouble(),
-        value: duration.inSeconds.toDouble(),
-        onChanged: (double value) {
-          audioPlayer.onAudioPositionChanged.listen((Duration p) => {
-                Text('Current position: $p'),
-                setState(() => position = p),
-              });
+                      ]),
+                      Column(
+                        children: [slider()],
+                      ),
+                    ])));
+          });
         });
   }
 }
