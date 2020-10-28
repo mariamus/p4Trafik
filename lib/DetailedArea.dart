@@ -6,6 +6,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'Util/NewsModel.dart';
 import 'package:./http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'Util/styles.dart';
 
 class DetailedArea extends StatefulWidget {
   final Area selectedArea;
@@ -27,7 +28,7 @@ class DetailedAreaState extends State<DetailedArea>
 
   generateColors() {
     _colors = List.generate(
-        listsizes, (int index) => Colors.blue[700]); // here 10 is items.length
+        listsizes, (int index) => Colors.blue[900]); // here 10 is items.length
   }
 
   @override
@@ -45,27 +46,17 @@ class DetailedAreaState extends State<DetailedArea>
     super.dispose();
   }
 
-  //tjekker status på appens lifecycleState, for at sikre at musik lukkes når appen ikke er i forgrunden.
+  //tjekker status på appens lifecycleState, for at sikre at lyd stoppes når appen ikke er i forgrunden.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.paused:
-        audioPlayer.stop();
-
-        break;
-
       case AppLifecycleState.resumed:
-        audioPlayer.stop();
-
-        break;
       case AppLifecycleState.inactive:
-        audioPlayer.stop();
-
-        break;
       case AppLifecycleState.detached:
         audioPlayer.stop();
-
+        playing = false;
         break;
     }
   }
@@ -82,21 +73,29 @@ class DetailedAreaState extends State<DetailedArea>
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
+        backgroundColor: Colors.blueGrey,
         appBar: AppBar(
-          title: Text(selectedArea.getTitle + ' Trafikmeldinger'),
+          backgroundColor: Colors.blue[900],
+          title: Text(
+            selectedArea.getTitle + ' Trafikmeldinger',
+            style: Style.headerTextStyle,
+          ),
           leading: MaterialButton(
             onPressed: () {
               Navigator.pop(context);
               audioPlayer.stop();
+              playing = false;
             },
             child: Icon(Icons.arrow_back, color: Colors.white),
           ),
         ),
         body: Container(
+          margin: new EdgeInsets.only(left: 10.0, right: 10.0),
           decoration: BoxDecoration(
-              color: Colors.lightBlue[50],
-              border: Border(
-                  bottom: BorderSide(color: Colors.blueAccent, width: 3.0))),
+            color: Colors.lightBlue[50],
+            shape: BoxShape.rectangle,
+            borderRadius: new BorderRadius.circular(15.0),
+          ),
           child: FutureBuilder(
             future: fetchNews(),
             builder: (context, snap) {
@@ -109,10 +108,12 @@ class DetailedAreaState extends State<DetailedArea>
                     //Returnerer list Tile med dato, duration og iconbutton der åbner BottomModalSheet
                     return ListTile(
                       title: Text(
-                          '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}'),
+                          '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}',
+                          style: Style.baseTextStyle),
                       subtitle: Text(
                           '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}' +
-                              " minutter"),
+                              " minutter",
+                          style: Style.baseTextStyle),
                       leading: new IconButton(
                           iconSize: 50,
                           alignment: Alignment.centerLeft,
@@ -125,6 +126,8 @@ class DetailedAreaState extends State<DetailedArea>
                             urlcopy = '${_item.enclosure}';
                             titletext =
                                 '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}';
+                            durationCopy =
+                                '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}';
                             setState(() {
                               getAudio();
                             });
@@ -132,9 +135,9 @@ class DetailedAreaState extends State<DetailedArea>
                     );
                   },
                   separatorBuilder: (context, i) => Divider(
-                    color: Colors.blueGrey[300],
+                    color: Colors.blueGrey,
                     height: 1.0,
-                    thickness: 2.0,
+                    thickness: 5.0,
                   ),
                   itemCount: listsizes,
                 );
@@ -166,6 +169,7 @@ class DetailedAreaState extends State<DetailedArea>
   // Future der sørger for at tilbageknappen stopper for afspilning af lyd, og derefter popper tilbage til main..
   Future<bool> _onBackPressed() {
     audioPlayer.stop();
+    playing = false;
     Navigator.pop(context);
     return null;
   }
@@ -195,33 +199,16 @@ class DetailedAreaState extends State<DetailedArea>
   //Slider widget
   Widget slider() {
     return Slider.adaptive(
+        activeColor: Colors.blue[900],
+        inactiveColor: Colors.indigo[900],
         min: 0.0,
         value: position.inSeconds.toDouble(),
-        max: duration.inSeconds.toDouble(),
+        max: duration.inSeconds.floorToDouble(),
         onChanged: (double value) {
           setState(() {
-            print(value);
             audioPlayer.seek(Duration(seconds: value.toInt()));
           });
         });
-  }
-
-  Widget slider2() {
-    StatefulBuilder(
-      builder: (context, setState) {
-        return Slider.adaptive(
-          min: 0.0,
-          value: position.inSeconds.toDouble(),
-          max: duration.inSeconds.toDouble(),
-          onChanged: (double value) {
-            setState(() {
-              print(value);
-              audioPlayer.seek(Duration(seconds: value.toInt()));
-            });
-          },
-        );
-      },
-    );
   }
 
   void getAudio() async {
@@ -231,6 +218,13 @@ class DetailedAreaState extends State<DetailedArea>
     audioPlayer.onAudioPositionChanged.listen((Duration pos) {
       setState(() => position = pos);
     });
+
+    audioPlayer.onPlayerCompletion.listen((event) {
+      setState(() {
+        playing = false;
+      });
+    });
+
     if (playing) {
       //pause
       var res = await audioPlayer.pause();
@@ -252,19 +246,18 @@ class DetailedAreaState extends State<DetailedArea>
 
   //popup modal der viser at afspilning er i gang.
   void _playerModalBottomSheet(context) {
-    Color _color = Colors.blue[700];
+    Color _color = Colors.blue[900];
     showModalBottomSheet(
+        isDismissible: false,
+        enableDrag: false,
+        isScrollControlled: false,
         backgroundColor: Colors.blue[100],
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
-        isDismissible: false,
-        enableDrag: false,
-        isScrollControlled: false,
         context: context,
         builder: (context) {
-          return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
+          return StatefulBuilder(builder: (context, setState) {
             return Container(
                 height: MediaQuery.of(context).size.height,
                 child: Padding(
@@ -299,17 +292,52 @@ class DetailedAreaState extends State<DetailedArea>
                               getAudio();
                             });
                           },
-                          child: Icon(
-                            playing == true
-                                ? Icons.pause_circle_outline
-                                : Icons.play_circle_outline,
-                            size: MediaQuery.of(context).size.width * .50,
-                            color: _color,
-                          ),
+                          child: StreamBuilder<Object>(
+                              stream: audioPlayer.onPlayerStateChanged,
+                              builder: (context, snapshot) {
+                                return Icon(
+                                  playing == true
+                                      ? Icons.pause_circle_outline
+                                      : Icons.play_circle_outline,
+                                  size: MediaQuery.of(context).size.width * .50,
+                                  color: _color,
+                                );
+                              }),
                         ),
                       ]),
                       Column(
-                        children: [slider()],
+                        children: [
+                          Container(
+                            child: StreamBuilder<Duration>(
+                                stream: audioPlayer.onAudioPositionChanged,
+                                builder: (context,
+                                    AsyncSnapshot<Duration> snapshot) {
+                                  return slider();
+                                }),
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                child: StreamBuilder<Duration>(
+                                    stream: audioPlayer.onAudioPositionChanged,
+                                    builder: (context,
+                                        AsyncSnapshot<Duration> snapshot) {
+                                      return Text(
+                                        position.inSeconds
+                                                .toDouble()
+                                                .toString() +
+                                            " / " +
+                                            duration.inSeconds
+                                                .toDouble()
+                                                .toString() +
+                                            " Sekunder.",
+                                        style: Style.smallTextStyle,
+                                      );
+                                    }),
+                              ),
+                            ],
+                          )
+                        ],
                       ),
                     ])));
           });

@@ -43,7 +43,7 @@ class _AboutMeState extends State<AboutMe> {
         child: Text(
             'Hej! \nJeg hedder Elisabeth, og jeg pendler dagligt på E45. Jeg er flere gange rendt ind i at jeg lige har misset en Trafikmelding på P4 og er endt i trælse køer på motorvejen.\n\nSå jeg har lavet denne lille app for at kunne tjekke seneste trafikmeldinger inden jeg kører.\n\nJeg håber du får glæde af min lille app, som er gratis og fri for reklamer. \n\nMen hvis du er blevet reddet fra en trafikprop, og føler dig gavmild, er du velkommen til at give en kop kaffe ved at klikke på hjertet i nederste hjørne. \n\nIngen tvang! :)\n\nP.S. Jeg undskylder hvis der opstår fejl. Jeg er stadig ny i app-udvikling.',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 14,
             )),
       ),
     );

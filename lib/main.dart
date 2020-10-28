@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'util/Areas.dart';
 import 'DetailedArea.dart';
 import 'util/AboutMe.dart';
+import 'Util/styles.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -36,9 +37,10 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blueGrey,
       appBar: AppBar(
         title: Text('P4 Trafik Områder'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue[900],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -47,14 +49,23 @@ class HomeScreenState extends State<HomeScreen> {
           });
         },
         child: Icon(Icons.face),
-        backgroundColor: Colors.blue[700],
+        backgroundColor: Colors.blue[900],
       ),
       body: ListView.separated(
         itemCount: _areas.length,
         itemBuilder: (context, index) {
           return Container(
+            margin: new EdgeInsets.only(left: 10.0, right: 10.0),
             decoration: BoxDecoration(
               color: Colors.lightBlue[50],
+              shape: BoxShape.rectangle,
+              borderRadius: new BorderRadius.circular(8.0),
+              boxShadow: <BoxShadow>[
+                new BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10.0,
+                    offset: new Offset(0.0, 10.0))
+              ],
             ),
             child: ListTile(
               title: Row(
@@ -62,7 +73,7 @@ class HomeScreenState extends State<HomeScreen> {
                 children: <Widget>[
                   Text(
                     _areas[index].getTitle,
-                    textScaleFactor: 1.5,
+                    style: Style.headerTextStyle,
                   ),
                 ],
               ),
@@ -73,9 +84,8 @@ class HomeScreenState extends State<HomeScreen> {
           );
         },
         separatorBuilder: (context, i) => Divider(
-          color: Colors.blueGrey[300],
-          height: 1.0,
-          thickness: 2.0,
+          height: 7.0,
+          indent: 46,
         ),
       ),
     );

@@ -28,7 +28,7 @@ dependencies:
   path_provider: "^1.6.18"
   audioplayers: ^0.16.1
   flutter_launcher_icons: ^0.7.4
-  url_launcher:
+  url_launcher: ^5.7.5
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -71,6 +71,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+fonts:
+  - family: Montserrat
+  - asset: assets/fonts/Montserrat-Regular.ttf
+    weight: 400
   # fonts:
   #   - family: Schyler
   #     fonts:
