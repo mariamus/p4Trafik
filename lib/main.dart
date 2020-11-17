@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'util/Areas.dart';
 import 'DetailedArea.dart';
 import 'util/AboutMe.dart';
-import 'Util/styles.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -37,55 +36,71 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey,
+      backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
       appBar: AppBar(
-        title: Text('P4 Trafik Områder'),
-        backgroundColor: Colors.blue[900],
+        title: Text(
+          'P4 Trafik Områder',
+          style: TextStyle(
+            fontFamily: 'Montserrat',
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.emoji_people),
+            color: Colors.white,
+            onPressed: () {
+              setState(() {
+                _hellopage();
+              });
+            },
+          )
+        ],
+        backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _hellopage();
-          });
-        },
-        child: Icon(Icons.face),
-        backgroundColor: Colors.blue[900],
-      ),
-      body: ListView.separated(
-        itemCount: _areas.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: new EdgeInsets.only(left: 10.0, right: 10.0),
-            decoration: BoxDecoration(
-              color: Colors.lightBlue[50],
-              shape: BoxShape.rectangle,
-              borderRadius: new BorderRadius.circular(8.0),
-              boxShadow: <BoxShadow>[
-                new BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10.0,
-                    offset: new Offset(0.0, 10.0))
-              ],
-            ),
-            child: ListTile(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    _areas[index].getTitle,
-                    style: Style.headerTextStyle,
-                  ),
+      body: Container(
+        margin: new EdgeInsets.only(top: 5),
+        child: ListView.separated(
+          itemCount: _areas.length,
+          itemBuilder: (context, index) {
+            return Container(
+              margin: new EdgeInsets.only(left: 10.0, right: 10.0),
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(64, 75, 96, .9),
+                shape: BoxShape.rectangle,
+                borderRadius: new BorderRadius.circular(8.0),
+                boxShadow: <BoxShadow>[
+                  new BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10.0,
+                      offset: new Offset(0.0, 10.0))
                 ],
               ),
-              onTap: () {
-                _handleDetailedViewdata(index);
-              },
-            ),
-          );
-        },
-        separatorBuilder: (context, i) => Divider(
-          height: 7.0,
-          indent: 46,
+              child: ListTile(
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      _areas[index].getTitle,
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        color: Colors.white,
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  _handleDetailedViewdata(index);
+                },
+              ),
+            );
+          },
+          separatorBuilder: (context, i) => Divider(
+            height: 7.0,
+            indent: 46,
+          ),
         ),
       ),
     );

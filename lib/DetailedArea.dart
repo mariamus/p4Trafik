@@ -6,7 +6,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'Util/NewsModel.dart';
 import 'package:./http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'Util/styles.dart';
 
 class DetailedArea extends StatefulWidget {
   final Area selectedArea;
@@ -19,23 +18,17 @@ class DetailedArea extends StatefulWidget {
 
 class DetailedAreaState extends State<DetailedArea>
     with WidgetsBindingObserver {
-  List<Color> _colors = [];
   int listsizes = 10;
   bool playing = false;
   AudioPlayer audioPlayer = new AudioPlayer();
   Duration duration = new Duration();
   Duration position = new Duration();
 
-  generateColors() {
-    _colors = List.generate(
-        listsizes, (int index) => Colors.blue[900]); // here 10 is items.length
-  }
-
   @override
   void initState() {
     super.initState();
     //opretter WidgetsBinding instance observer.
-    generateColors();
+
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -73,16 +66,22 @@ class DetailedAreaState extends State<DetailedArea>
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
         appBar: AppBar(
-          backgroundColor: Colors.blue[900],
+          backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
           title: Text(
             selectedArea.getTitle + ' Trafikmeldinger',
-            style: Style.headerTextStyle,
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              color: Colors.white,
+              fontSize: 20.0,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           leading: MaterialButton(
             onPressed: () {
               Navigator.pop(context);
+              position = Duration(seconds: 0);
               audioPlayer.stop();
               playing = false;
             },
@@ -92,9 +91,9 @@ class DetailedAreaState extends State<DetailedArea>
         body: Container(
           margin: new EdgeInsets.only(left: 10.0, right: 10.0),
           decoration: BoxDecoration(
-            color: Colors.lightBlue[50],
+            color: Color.fromRGBO(64, 75, 96, .9),
             shape: BoxShape.rectangle,
-            borderRadius: new BorderRadius.circular(15.0),
+            borderRadius: new BorderRadius.circular(10.0),
           ),
           child: FutureBuilder(
             future: fetchNews(),
@@ -107,43 +106,67 @@ class DetailedAreaState extends State<DetailedArea>
                     final NewsModel _item = _news[i];
                     //Returnerer list Tile med dato, duration og iconbutton der åbner BottomModalSheet
                     return ListTile(
-                      title: Text(
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 5.0),
+                        title: Text(
                           '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}',
-                          style: Style.baseTextStyle),
-                      subtitle: Text(
-                          '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}' +
-                              " minutter",
-                          style: Style.baseTextStyle),
-                      leading: new IconButton(
-                          iconSize: 50,
-                          alignment: Alignment.centerLeft,
-                          icon: Icon(
-                            Icons.play_circle_outline,
-                            color: _colors[i],
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            color: Colors.white,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w500,
                           ),
-                          onPressed: () {
-                            _playerModalBottomSheet(context);
-                            urlcopy = '${_item.enclosure}';
-                            titletext =
-                                '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}';
-                            durationCopy =
-                                '${_item.duration.toString().substring(1 + 2).split('.').first.padLeft(5, "0")}';
-                            setState(() {
-                              getAudio();
-                            });
-                          }),
-                    );
+                        ),
+                        subtitle: Text(
+                          '${_item.duration.toString().substring(2, 7)}' +
+                              " minutter",
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            color: Colors.white,
+                            fontSize: 10.0,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        leading: Container(
+                          padding: EdgeInsets.only(right: 12.0),
+                          decoration: new BoxDecoration(
+                            border: new Border(
+                              right: new BorderSide(
+                                  width: 1.0, color: Colors.white24),
+                            ),
+                          ),
+                          child: new Icon(
+                            Icons.directions_car,
+                            color: Colors.white,
+                            size: 50,
+                          ),
+                        ),
+                        trailing: Icon(Icons.keyboard_arrow_right,
+                            color: Colors.white, size: 30.0),
+                        onTap: () {
+                          _playerModalBottomSheet(context);
+                          urlcopy = '${_item.enclosure}';
+                          titletext =
+                              '${_item.pubDate.toString().replaceFirst("g ", "g\n").replaceFirst(new RegExp("UV(?:11?|[3-8]) "), "")}';
+                          durationCopy =
+                              '${_item.duration.toString().substring(2, 7)}';
+                          setState(() {
+                            getAudio();
+                          });
+                        });
                   },
                   separatorBuilder: (context, i) => Divider(
-                    color: Colors.blueGrey,
+                    color: Color.fromRGBO(58, 66, 86, 1.0),
                     height: 1.0,
-                    thickness: 5.0,
+                    thickness: 2.0,
                   ),
                   itemCount: listsizes,
                 );
               } else if (snap.hasError) {
                 return Center(
-                  child: Text(snap.error.toString()),
+                  child: Text(
+                    snap.error.toString(),
+                  ),
                 );
               } else {
                 return Center(
@@ -160,7 +183,6 @@ class DetailedAreaState extends State<DetailedArea>
   //Future Function der sletter appen's fil cache for at sikre at List altid er populeret med nyeste entries.
   Future<void> _deleteCacheDir() async {
     final cacheDir = await getTemporaryDirectory();
-
     if (cacheDir.existsSync()) {
       cacheDir.deleteSync(recursive: true);
     }
@@ -170,6 +192,7 @@ class DetailedAreaState extends State<DetailedArea>
   Future<bool> _onBackPressed() {
     audioPlayer.stop();
     playing = false;
+    position = Duration(seconds: 0);
     Navigator.pop(context);
     return null;
   }
@@ -199,11 +222,11 @@ class DetailedAreaState extends State<DetailedArea>
   //Slider widget
   Widget slider() {
     return Slider.adaptive(
-        activeColor: Colors.blue[900],
-        inactiveColor: Colors.indigo[900],
+        activeColor: Colors.white,
+        inactiveColor: Color.fromRGBO(64, 75, 96, .9),
         min: 0.0,
         value: position.inSeconds.toDouble(),
-        max: duration.inSeconds.floorToDouble(),
+        max: duration.inSeconds.toDouble(),
         onChanged: (double value) {
           setState(() {
             audioPlayer.seek(Duration(seconds: value.toInt()));
@@ -211,6 +234,7 @@ class DetailedAreaState extends State<DetailedArea>
         });
   }
 
+//Metode der henter lyd og styrer duration og position værdier.
   void getAudio() async {
     audioPlayer.onDurationChanged.listen((Duration dur) {
       setState(() => duration = dur);
@@ -222,6 +246,7 @@ class DetailedAreaState extends State<DetailedArea>
     audioPlayer.onPlayerCompletion.listen((event) {
       setState(() {
         playing = false;
+        position = new Duration(minutes: 0, seconds: 0);
       });
     });
 
@@ -246,12 +271,12 @@ class DetailedAreaState extends State<DetailedArea>
 
   //popup modal der viser at afspilning er i gang.
   void _playerModalBottomSheet(context) {
-    Color _color = Colors.blue[900];
+    Color _color = Colors.white;
     showModalBottomSheet(
         isDismissible: false,
         enableDrag: false,
         isScrollControlled: false,
-        backgroundColor: Colors.blue[100],
+        backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),
@@ -259,52 +284,68 @@ class DetailedAreaState extends State<DetailedArea>
         builder: (context) {
           return StatefulBuilder(builder: (context, setState) {
             return Container(
-                height: MediaQuery.of(context).size.height,
-                child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text(
-                            titletext,
-                          ),
-                          Spacer(),
-                          IconButton(
-                              icon: Icon(Icons.cancel),
-                              color: _color,
-                              iconSize: 40,
-                              onPressed: () {
-                                audioPlayer.stop();
-                                setState(() {
-                                  playing = false;
-                                  duration = Duration(seconds: 0);
-                                  position = Duration(seconds: 0);
-                                });
-                                Navigator.of(context).pop();
-                              }),
-                        ],
-                      ),
-                      Column(children: [
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              getAudio();
-                            });
-                          },
-                          child: StreamBuilder<Object>(
-                              stream: audioPlayer.onPlayerStateChanged,
-                              builder: (context, snapshot) {
-                                return Icon(
-                                  playing == true
-                                      ? Icons.pause_circle_outline
-                                      : Icons.play_circle_outline,
-                                  size: MediaQuery.of(context).size.width * .50,
-                                  color: _color,
-                                );
-                              }),
+              height: MediaQuery.of(context).size.height,
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        titletext,
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          color: Colors.white,
+                          fontSize: 15.0,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ]),
+                      ),
+                      Spacer(),
+                      IconButton(
+                          icon: Icon(Icons.cancel),
+                          color: _color,
+                          iconSize: 40,
+                          onPressed: () {
+                            audioPlayer.stop();
+                            setState(() {
+                              playing = false;
+                              duration = Duration(seconds: 0);
+                              position = Duration(seconds: 0);
+                            });
+                            Navigator.of(context).pop();
+                          }),
+                    ],
+                  ),
+                  Column(children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          getAudio();
+                        });
+                      },
+                      child: StreamBuilder<Object>(
+                          stream: audioPlayer.onPlayerStateChanged,
+                          builder: (context, snapshot) {
+                            return Icon(
+                              playing == true
+                                  ? Icons.pause_circle_outline
+                                  : Icons.play_circle_outline,
+                              size: MediaQuery.of(context).size.width * .50,
+                              color: _color,
+                            );
+                          }),
+                    ),
+                  ]),
+                  Column(
+                    children: [
+                      Container(
+                        child: StreamBuilder<Duration>(
+                            stream: audioPlayer.onAudioPositionChanged,
+                            builder:
+                                (context, AsyncSnapshot<Duration> snapshot) {
+                              return slider();
+                            }),
+                      ),
                       Column(
                         children: [
                           Container(
@@ -312,34 +353,27 @@ class DetailedAreaState extends State<DetailedArea>
                                 stream: audioPlayer.onAudioPositionChanged,
                                 builder: (context,
                                     AsyncSnapshot<Duration> snapshot) {
-                                  return slider();
+                                  return Text(
+                                    position.toString().substring(2, 7) +
+                                        " / " +
+                                        durationCopy +
+                                        " minutter.",
+                                    style: TextStyle(
+                                      fontFamily: 'Montserrat',
+                                      color: Colors.white,
+                                      fontSize: 15.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  );
                                 }),
                           ),
-                          Column(
-                            children: [
-                              Container(
-                                child: StreamBuilder<Duration>(
-                                    stream: audioPlayer.onAudioPositionChanged,
-                                    builder: (context,
-                                        AsyncSnapshot<Duration> snapshot) {
-                                      return Text(
-                                        position.inSeconds
-                                                .toDouble()
-                                                .toString() +
-                                            " / " +
-                                            duration.inSeconds
-                                                .toDouble()
-                                                .toString() +
-                                            " Sekunder.",
-                                        style: Style.smallTextStyle,
-                                      );
-                                    }),
-                              ),
-                            ],
-                          )
                         ],
                       ),
-                    ])));
+                    ],
+                  ),
+                ]),
+              ),
+            );
           });
         });
   }
