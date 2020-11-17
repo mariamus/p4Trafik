@@ -11,11 +11,14 @@ class Areas {
         Area('Esbjerg', 'https://www.dr.dk/mu/feed/p4-trafik-esbjerg-es4.xml'));
     _areas.add(Area('Nordjylland',
         'https://www.dr.dk/mu/feed/p4-trafik-nordjylland-al4.xml'));
-    _areas.add(Area('Syd', 'https://www.dr.dk/mu/feed/p4-trafik-syd-ab4.xml'));
+
+    _areas.add(Area('Midt og Vest',
+        'https://www.dr.dk/mu/feed/p4-trafik-midt-og-vest-ho4.xml'));
     _areas.add(Area(
         'Trekanten', 'https://www.dr.dk/mu/feed/p4-trafik-trekanten-tr4.xml'));
     _areas.add(Area('Østjylland',
         'https://www.dr.dk/mu/feed/p4-trafik-oestjylland-ar4.xml'));
+    _areas.add(Area('Syd', 'https://www.dr.dk/mu/feed/p4-trafik-syd-ab4.xml'));
     _areas.add(Area('Fyn', 'https://www.dr.dk/mu/feed/p4-trafik-fyn-od4.xml'));
   }
 
